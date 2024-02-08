@@ -1,0 +1,136 @@
+---
+title: "sdshw3"
+output: html_document
+date: "2024-02-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r echo = FALSE, results='hide'}
+creatinine_data <- read.csv("/Users/disharaj/Downloads/creatinine.csv")
+```
+
+```{r include=FALSE, results='hide'}
+library(ggplot2)
+library(tidyverse)
+library(mosaic)
+library(dplyr)
+library(conflicted)
+conflicts_prefer(base::max)
+conflicts_prefer(base::min)
+```
+# *Problem 1*
+
+# **A**
+```{r echo = FALSE}
+ggplot(creatinine_data, aes(x = age, y = creatclear)) +
+  geom_point(color = "plum2") +
+  geom_smooth(aes(x = age, y = creatclear), method = "lm", color = "plum4") +
+  labs(title = "Relationship between age and clearance rate", x = "Age", y = "Clearnace Rate")
+```
+
+```{r echo = FALSE}
+model_creatinine = lm(creatclear ~ age, data = creatinine_data)
+coef(model_creatinine)
+creatinine_data = creatinine_data %>%
+  mutate(creatclear_predict = predict(model_creatinine))
+creatinine_data
+```
+The table above is formed after using the predict function in order to find expected values of creatclear using a linear model. The function can be modelled as y = 147.8129158 - 0.6198159(age). From the table above, we can expect creatine clearance rate for a 55 year old as approximately 113.72304. We can calculate this from our equation as 147.8129158 - 0.6198159(55). 
+
+# **B**
+The change of creatine clearance with age can be represented as the slope of the regression line, which we calculated above as -0.6198159. This means as age increases, the creatine clearance rate decreases by approximately 0.61 ml/minute per year.
+
+# **C**
+```{r echo =FALSE}
+age1 <- 40
+age2 <- 60
+c_data <- data.frame(age = c(age1, age2))
+residuals = resid(lm(creatclear ~ age, data = creatinine_data), cdata = c_data)
+result <- data.frame(age = c(age1, age2), residual = residuals[1:2])
+print(result)
+```
+Residuals can be calculated as Actual - Predicted value. It can help us make fair comparisons that help us adjust for the systematic effect of some variable. With the help of residuals, which we calculated using the resid function, we can conclude that the 60 year old with a rate of 112 has a lower absolute creatine clearance rate, but a higher rate for their age. 
+
+# *Problem 2*
+
+Beta is the total measure of risk indicator for a company based on the market. If the beta is zero, there is no systemic risk. As for the regression model, the intercept "B naught" is the intersection on the y-axis when the independent variable is zero. Bridging these two priciples, if the intercept is at zero, there is no risk, but if there is a negative value for the intercept, it indicates that the company is on the safer end with insurance in case the market is not favorable. A positive beta or intercept above one indicates that the stock is unstable and if less than one are less volatile
+
+```{r echo =FALSE, results='hide'}
+marketmodel <- read.csv("/Users/disharaj/Downloads/marketmodel.csv")
+``` 
+
+```{r echo = FALSE}
+library(knitr)
+library(kableExtra)
+
+
+marketmodeldf <- data.frame(marketmodel)
+
+tableCaption <- "Daily returns for the S&P 500 stock index beginning in 2019. The returns are indicated in decimal format such as if the index gained 2.5%, the cell would show 0.025. Companies includes Apple, Google, Merck, Johnson and Johnson, Walmart, and Target."
+kable(marketmodeldf, caption = tableCaption, format = "html") %>%
+  kable_styling()
+
+```
+
+```{r echo =FALSE}
+model <- marketmodel %>% select_if(is.numeric)
+numeric_vector <- unlist(model)
+max_value <- max(numeric_vector, na.rm = TRUE)
+max_value
+
+model1<- marketmodeldf %>% select_if(is.numeric)
+
+numeric_vector1<- unlist(model1)
+
+min_value<- min(numeric_vector1, na.rm= TRUE)
+min_value
+```
+
+
+Highest systematic risk can be found on Apple on August 31st, 2020 as the beta value is the highest and well over one. The lowest systematic risk can be found for Apple on March 16th, 2020 as the beta value is negative and thus on a much safer side with insurance in case the market does decide to flip tables on the company again.
+
+# *Problem 3*
+
+```{r echo=FALSE, results='hide'}
+covid_data <- read.csv("/Users/disharaj/Downloads/covid.csv")
+```
+
+```{r echo=FALSE}
+fit_exponential_model <- function(country_data) {
+  model <- lm(log(deaths) ~ days_since_first_death, data = country_data)
+  growth_rate <- coef(model)[2]
+  doubling_time <- log(2) / growth_rate
+  return(list(growth_rate = growth_rate, doubling_time = doubling_time, model = model))
+}
+italy_model <- fit_exponential_model(subset(covid_data, country == "Italy"))
+spain_model <- fit_exponential_model(subset(covid_data, country == "Spain"))
+print(paste("1. Italy Growth Rate:", round(italy_model$growth_rate, 3)))
+print(paste("   Italy Doubling Time:", round(italy_model$doubling_time), "days"))
+print(paste("2. Spain Growth Rate:", round(spain_model$growth_rate, 3)))
+print(paste("   Spain Doubling Time:", round(spain_model$doubling_time), "days"))
+ggplot(covid_data, aes(x = days_since_first_death, y = deaths, color = country)) +
+  geom_line(size = 1) +
+  labs(title = "Reported Daily Deaths Over Time",
+       x = "Days Since First Death",
+       y = "Reported Daily Deaths",
+       color = "Country") +
+  scale_color_manual(values = c("Italy" = "plum2", "Spain" = "plum4")) +
+  theme_minimal()
+```
+
+# *Problem 4*
+
+```{r echo=FALSE, results='hide'}
+milk_data <- read.csv("/Users/disharaj/Downloads/milk.csv")
+```
+
+```{r echo=FALSE}
+model <- lm(log(sales) ~ log(price), data = milk_data)
+elasticity_estimate <- coef(model)[2]
+print(paste("Estimated Price Elasticity of Demand = ", round(elasticity_estimate, 3)))
+```
+
+To estimate the price elasticity of demand for milk, I used the power-law model to the data using linear regression. The model was in the form of Q = Kx^B, where Q is quantity demanded, x is price, and B is price elasticity of demand. After fitting the model, I estimated the coefficient of price. The estimated price elasticity of demand was found to be -1.619, which is a relatively high value of elasticity, showing that consumers are quite sensitive to price changes for milk.
